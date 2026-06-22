@@ -53,3 +53,50 @@ A task is **done** only when all of these are true:
 - [ ] **No exposed secrets** — nothing sensitive in code, logs, or committed env files.
 - [ ] **Committed with a clear message** (Conventional Commits — see `16_COMMIT_RULES.md`).
 - [ ] **Includes a short final report** — what changed, files touched, anything to follow up.
+
+---
+
+## Local QA Checklist
+
+Run before any deploy / after major changes. Local Postgres must be running.
+
+### Setup & static
+- [ ] `npm install` · `npx prisma generate` · `npm run seed` (run **twice** — no duplicate rows).
+- [ ] `npm run lint` · `npm run typecheck` · `npm run build` all pass.
+- [ ] `git status` clean of `.env`, `uploads/`, and test artifacts (`_smoke/`, `_seedprobe.ts`).
+
+### Auth
+- [ ] Unauthenticated `/admin/*` → 307 to `/admin/login`.
+- [ ] Wrong password sets no session; correct password logs in.
+- [ ] Authenticated `/admin/login` → redirects to dashboard; logout works.
+
+### Admin CRUD (each module: categories, tech, projects, services, skill-groups,
+      skills, experience, testimonials, blog, tags, messages, settings, media)
+- [ ] List + create + edit + delete; validation errors show; unique-slug handled.
+- [ ] Featured / publish toggles work where present; empty states render.
+
+### Public + confidentiality (the important one)
+- [ ] All public pages render (`/`, `/projects`, `/projects/[slug]`, `/services`,
+      `/blog`, `/blog/[slug]`, `/about`, `/contact`, `/sitemap.xml`, `/robots.txt`).
+- [ ] PUBLIC project → full case study. LIMITED → notice + **no** problem/solution/
+      metrics/live-URL leak. CONFIDENTIAL & DRAFT → **404** and absent from lists.
+- [ ] **Check `view-source` (not just the rendered page)**: confirm sensitive fields
+      of LIMITED projects are NOT in the HTML/RSC flight payload. (Use the sanitized
+      `getPublicProjectViewBySlug` — never pass a raw project row to the page.)
+
+### Media upload
+- [ ] PNG / JPG / **WebP** accepted (incl. when the browser sends a generic MIME),
+      converted to WebP, resized to ≤1920px wide.
+- [ ] TXT / SVG / oversized / PDF-to-image-target rejected; resume PDF accepted.
+- [ ] Spoofed extension (e.g. text named `.png`) rejected by magic-byte sniff.
+- [ ] Files land under `UPLOAD_DIR` and are gitignored.
+
+### Contact form
+- [ ] Valid submit saves a Message; invalid email / missing fields rejected;
+      honeypot blocks spam; rate limit caps a single IP (test with `X-Forwarded-For`).
+- [ ] Message appears in `/admin/messages`; mark read/unread + delete work.
+
+### Three.js hero (real browser — WebGL can't be tested headlessly)
+- [ ] Homepage loads; 3D hero renders; no console / WebGL errors.
+- [ ] Hero H1 + CTAs readable and clickable over/around the canvas.
+- [ ] Reduced-motion and mobile fall back to the static visual; other pages don't load Three.js.

@@ -1,0 +1,65 @@
+# === Secrets / env ===
+.env
+.env.local
+.env.*.local
+.env.production
+.env.development
+*.pem
+*.key
+
+# === Node / Next.js ===
+node_modules/
+.next/
+out/
+build/
+dist/
+.turbo/
+*.tsbuildinfo
+next-env.d.ts
+
+# === Prisma ===
+# Keep schema + migrations tracked; ignore generated client + local db
+/prisma/generated/
+*.db
+*.db-journal
+dev.db
+dev.db-journal
+
+# === Uploads / media (served from server, never committed) ===
+/uploads/
+/public/uploads/
+/var/www/zerubabel.et/uploads/
+
+# === Backups ===
+*.sql
+*.sql.gz
+*.tar.gz
+/backups/
+
+# === Logs ===
+logs/
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+pm2.log
+
+# === Test / coverage ===
+coverage/
+.nyc_output/
+playwright-report/
+test-results/
+
+# === Editor / OS ===
+.vscode/*
+!.vscode/extensions.json
+.idea/
+.DS_Store
+Thumbs.db
+*.swp
+
+# === Misc ===
+.vercel
+.cache/
+tmp/

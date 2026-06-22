@@ -38,8 +38,17 @@ export async function getPublishedProjects() {
   });
 }
 
-export async function getPublicProjectBySlug(slug: string) {
-  return prisma.project.findFirst({
+/**
+ * Sanitized public view of a single project.
+ *
+ * Returns a hand-shaped object — NOT the raw Prisma row — so that sensitive
+ * case-study fields (problem/solution/features/outcome/metrics/live+github URLs
+ * and the gallery) are stripped on the server for LIMITED or isConfidential
+ * projects. This keeps them out of the rendered HTML *and* the RSC flight
+ * payload, which a raw row would otherwise serialize even when not displayed.
+ */
+export async function getPublicProjectViewBySlug(slug: string) {
+  const p = await prisma.project.findFirst({
     where: { slug, ...PUBLIC_PROJECT_WHERE },
     include: {
       category: { select: { name: true, slug: true } },
@@ -47,6 +56,42 @@ export async function getPublicProjectBySlug(slug: string) {
       images: { orderBy: { order: "asc" } },
     },
   });
+  if (!p) return null;
+
+  const showFull = p.visibility === "PUBLIC" && !p.isConfidential;
+  const cover = p.images.find((i) => i.type === "COVER") ?? p.images[0] ?? null;
+
+  return {
+    slug: p.slug,
+    title: p.title,
+    summary: p.summary,
+    category: p.category,
+    techStack: p.techStack,
+    projectType: p.projectType,
+    industry: p.industry,
+    myRole: p.myRole,
+    keywords: p.keywords,
+    // SEO fields (safe to expose in <meta>/JSON-LD)
+    metaTitle: p.metaTitle,
+    metaDescription: p.metaDescription,
+    ogImage: p.ogImage,
+    canonicalUrl: p.canonicalUrl,
+    cover: cover ? { url: cover.url, altText: cover.altText } : null,
+    showFull,
+    // Sensitive — only present for a full public case study.
+    problem: showFull ? p.problem : null,
+    solution: showFull ? p.solution : null,
+    features: showFull ? p.features : null,
+    outcome: showFull ? p.outcome : null,
+    impactMetrics: showFull ? p.impactMetrics : null,
+    liveUrl: showFull ? p.liveUrl : null,
+    githubUrl: showFull ? p.githubUrl : null,
+    gallery: showFull
+      ? p.images
+          .filter((i) => i.id !== cover?.id)
+          .map((i) => ({ id: i.id, url: i.url, altText: i.altText, caption: i.caption }))
+      : [],
+  };
 }
 
 export async function getPublishedServices() {

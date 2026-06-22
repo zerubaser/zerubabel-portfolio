@@ -168,7 +168,11 @@ export async function storeUpload(
     if (!IMAGE_EXTS.has(declaredExt)) {
       throw new UploadError("Unsupported image type. Allowed: jpg, jpeg, png, webp.");
     }
-    if (declaredMime && !IMAGE_MIMES.has(declaredMime)) {
+    // Reject a mismatched image/* MIME (e.g. image/gif, image/tiff). A generic
+    // application/octet-stream or empty type is allowed — some browsers send it
+    // for .webp — because the extension + magic-byte sniff below still validate
+    // the real content.
+    if (declaredMime.startsWith("image/") && !IMAGE_MIMES.has(declaredMime)) {
       throw new UploadError("Unsupported image MIME type.");
     }
     if (!sniffed || sniffed === "pdf") {

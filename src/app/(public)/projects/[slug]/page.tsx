@@ -9,7 +9,7 @@ import { JsonLd } from "@/components/public/json-ld";
 import { buildMetadata, resolveSiteUrl } from "@/lib/seo";
 import { breadcrumbJsonLd, creativeWorkJsonLd } from "@/lib/structured-data";
 import { primaryCta, secondaryCta } from "@/lib/public-ui";
-import { getSiteSettings, getPublicProjectBySlug } from "@/server/repositories/public-site";
+import { getSiteSettings, getPublicProjectViewBySlug } from "@/server/repositories/public-site";
 
 export const dynamic = "force-dynamic";
 
@@ -21,7 +21,7 @@ export async function generateMetadata({
   const { slug } = await params;
   const [settings, project] = await Promise.all([
     getSiteSettings(),
-    getPublicProjectBySlug(slug),
+    getPublicProjectViewBySlug(slug),
   ]);
   if (!project) return { title: "Not found", robots: { index: false } };
   return buildMetadata({
@@ -63,19 +63,15 @@ export default async function ProjectDetailPage({
   const { slug } = await params;
   const [settings, project] = await Promise.all([
     getSiteSettings(),
-    getPublicProjectBySlug(slug),
+    getPublicProjectViewBySlug(slug),
   ]);
   if (!project) notFound();
 
   const base = resolveSiteUrl(settings).replace(/\/$/, "");
-  // PUBLIC + not flagged confidential → full case study; otherwise limited.
-  const showFull = project.visibility === "PUBLIC" && !project.isConfidential;
-
-  const cover = project.images.find((i) => i.type === "COVER") ?? project.images[0];
-  const gallery = showFull ? project.images.filter((i) => i.id !== cover?.id) : [];
+  const { showFull } = project;
 
   const metrics =
-    showFull && project.impactMetrics && typeof project.impactMetrics === "object" && !Array.isArray(project.impactMetrics)
+    project.impactMetrics && typeof project.impactMetrics === "object" && !Array.isArray(project.impactMetrics)
       ? Object.entries(project.impactMetrics as Record<string, unknown>)
       : [];
 
@@ -91,7 +87,18 @@ export default async function ProjectDetailPage({
             ],
             base,
           ),
-          creativeWorkJsonLd(project, base),
+          creativeWorkJsonLd(
+            {
+              title: project.title,
+              slug: project.slug,
+              summary: project.summary,
+              keywords: project.keywords,
+              ogImage: project.ogImage,
+              category: project.category,
+              images: project.cover ? [{ url: project.cover.url }] : [],
+            },
+            base,
+          ),
         ]}
       />
 
@@ -109,9 +116,9 @@ export default async function ProjectDetailPage({
         <p className="mt-3 max-w-3xl text-lg text-muted-foreground">{project.summary}</p>
       </header>
 
-      {cover ? (
+      {project.cover ? (
         <div className="mt-8 overflow-hidden rounded-2xl border border-white/10">
-          <MediaImage src={cover.url} alt={cover.altText ?? `${project.title} cover`} className="max-h-[480px] w-full object-cover" />
+          <MediaImage src={project.cover.url} alt={project.cover.altText ?? `${project.title} cover`} className="max-h-[480px] w-full object-cover" />
         </div>
       ) : null}
 
@@ -158,7 +165,7 @@ export default async function ProjectDetailPage({
             </section>
           ) : null}
 
-          <ProjectGallery images={gallery} title={project.title} />
+          <ProjectGallery images={project.gallery} title={project.title} />
 
           {project.liveUrl || project.githubUrl ? (
             <div className="flex flex-wrap gap-3">

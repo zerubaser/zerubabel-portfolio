@@ -7,7 +7,16 @@ const NAV = [
   { href: "/admin/projects", label: "Projects" },
   { href: "/admin/categories", label: "Categories" },
   { href: "/admin/tech", label: "Tech" },
+  { href: "/admin/services", label: "Services" },
+  { href: "/admin/skill-groups", label: "Skill Groups" },
+  { href: "/admin/skills", label: "Skills" },
+  { href: "/admin/experience", label: "Experience" },
+  { href: "/admin/testimonials", label: "Testimonials" },
+  { href: "/admin/blog", label: "Blog" },
+  { href: "/admin/tags", label: "Tags" },
   { href: "/admin/media", label: "Media" },
+  { href: "/admin/messages", label: "Messages" },
+  { href: "/admin/settings", label: "Settings" },
 ];
 
 /**

@@ -57,6 +57,7 @@ export async function submitContactMessage(
   await prisma.message.create({
     data: {
       name: parsed.data.name,
+      // Zod has already trimmed name/email/subject/body.
       email: parsed.data.email,
       subject: parsed.data.subject ?? null,
       body: parsed.data.body,
@@ -64,6 +65,10 @@ export async function submitContactMessage(
       userAgent: h.get("user-agent") ?? null,
     },
   });
+
+  // TODO(email): when SMTP_* env is configured, send a notification here
+  // (e.g. via nodemailer/Resend) to CONTACT_TO_EMAIL. Keep it best-effort —
+  // a failed send must not lose the saved message. No secrets in code.
 
   return SUCCESS;
 }

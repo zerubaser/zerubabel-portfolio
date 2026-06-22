@@ -1,8 +1,12 @@
 import type { Metadata } from "next";
-import Link from "next/link";
 import { notFound } from "next/navigation";
+import { Breadcrumbs } from "@/components/public/breadcrumbs";
+import { TechBadge } from "@/components/public/tech-badge";
+import { ContentRenderer } from "@/components/public/content-renderer";
 import { MediaImage } from "@/components/public/media-image";
-import { buildMetadata } from "@/lib/seo";
+import { JsonLd } from "@/components/public/json-ld";
+import { buildMetadata, resolveSiteUrl } from "@/lib/seo";
+import { breadcrumbJsonLd, blogPostingJsonLd } from "@/lib/structured-data";
 import { getSiteSettings, getPublishedPostBySlug } from "@/server/repositories/public-site";
 
 export const dynamic = "force-dynamic";
@@ -35,38 +39,56 @@ export default async function BlogDetailPage({
   params: Promise<{ slug: string }>;
 }) {
   const { slug } = await params;
-  const post = await getPublishedPostBySlug(slug);
+  const [settings, post] = await Promise.all([
+    getSiteSettings(),
+    getPublishedPostBySlug(slug),
+  ]);
   if (!post) notFound();
+
+  const base = resolveSiteUrl(settings).replace(/\/$/, "");
+  const published = post.publishedAt ? post.publishedAt.toISOString().slice(0, 10) : null;
 
   return (
     <article className="mx-auto max-w-3xl py-10">
-      <Link href="/blog" className="text-sm text-sky-400 hover:underline">← All posts</Link>
+      <JsonLd
+        data={[
+          breadcrumbJsonLd(
+            [
+              { name: "Home", path: "/" },
+              { name: "Blog", path: "/blog" },
+              { name: post.title, path: `/blog/${post.slug}` },
+            ],
+            base,
+          ),
+          blogPostingJsonLd(post, settings, base),
+        ]}
+      />
 
-      <header className="mt-4">
-        <p className="text-xs text-muted-foreground">
-          {post.publishedAt ? post.publishedAt.toISOString().slice(0, 10) : ""}
-        </p>
-        <h1 className="mt-1 text-3xl font-bold sm:text-4xl">{post.title}</h1>
+      <Breadcrumbs
+        items={[
+          { label: "Home", href: "/" },
+          { label: "Blog", href: "/blog" },
+          { label: post.title },
+        ]}
+      />
+
+      <header>
+        {published ? <time dateTime={published} className="text-xs text-muted-foreground">{published}</time> : null}
+        <h1 className="mt-1 text-3xl font-bold tracking-tight sm:text-4xl">{post.title}</h1>
         {post.tags.length > 0 ? (
           <div className="mt-3 flex flex-wrap gap-1.5">
-            {post.tags.map((t) => (
-              <span key={t.tag.slug} className="rounded-full border border-white/10 px-2 py-0.5 text-xs text-muted-foreground">{t.tag.name}</span>
-            ))}
+            {post.tags.map((t) => <TechBadge key={t.tag.slug}>{t.tag.name}</TechBadge>)}
           </div>
         ) : null}
       </header>
 
       {post.coverImage ? (
-        <div className="mt-6 overflow-hidden rounded-xl border border-white/10">
+        <div className="mt-8 overflow-hidden rounded-2xl border border-white/10">
           <MediaImage src={post.coverImage} alt={post.title} className="max-h-[480px] w-full object-cover" />
         </div>
       ) : null}
 
-      {/* Content is stored as plain text / lightweight markdown. Rendered as
-          escaped text (whitespace preserved) — no raw HTML injection. */}
-      <div className="mt-8 whitespace-pre-wrap leading-relaxed text-muted-foreground">
-        {post.content}
-      </div>
+      <ContentRenderer content={post.content} className="mt-8 text-base" />
     </article>
   );
 }

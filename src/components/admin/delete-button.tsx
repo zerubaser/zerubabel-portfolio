@@ -5,11 +5,13 @@ import { Button } from "@/components/ui/button";
 export function DeleteButton({
   action,
   id,
+  name = "id",
   label = "Delete",
   confirmMessage = "Delete this item? This cannot be undone.",
 }: {
   action: (formData: FormData) => void | Promise<void>;
   id: string;
+  name?: string;
   label?: string;
   confirmMessage?: string;
 }) {
@@ -20,7 +22,7 @@ export function DeleteButton({
         if (!window.confirm(confirmMessage)) event.preventDefault();
       }}
     >
-      <input type="hidden" name="id" value={id} />
+      <input type="hidden" name={name} value={id} />
       <Button type="submit" variant="destructive" size="sm">
         {label}
       </Button>

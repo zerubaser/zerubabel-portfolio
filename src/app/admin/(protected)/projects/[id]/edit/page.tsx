@@ -1,6 +1,8 @@
 import type { Metadata } from "next";
+import Link from "next/link";
 import { notFound } from "next/navigation";
 import { prisma } from "@/lib/prisma";
+import { buttonVariants } from "@/components/ui/button";
 import { ProjectForm } from "../../project-form";
 import { updateProject } from "@/server/actions/projects";
 
@@ -69,7 +71,15 @@ export default async function EditProjectPage({
 
   return (
     <div className="flex flex-col gap-6">
-      <h1 className="text-2xl font-semibold">Edit project</h1>
+      <div className="flex items-center justify-between gap-4">
+        <h1 className="text-2xl font-semibold">Edit project</h1>
+        <Link
+          href={`/admin/projects/${project.id}/images`}
+          className={buttonVariants({ variant: "outline" })}
+        >
+          Manage images
+        </Link>
+      </div>
       <ProjectForm
         action={action}
         categories={categories}

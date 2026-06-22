@@ -30,11 +30,14 @@ dev.db-journal
 /public/uploads/
 /var/www/zerubabel.et/uploads/
 
-# === Backups ===
+# === Backups / DB dumps ===
 *.sql
 *.sql.gz
 *.tar.gz
 /backups/
+# ...but Prisma migration files MUST be tracked:
+!prisma/migrations/
+!prisma/migrations/**
 
 # === Logs ===
 logs/

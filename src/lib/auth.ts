@@ -1,30 +1,49 @@
 import NextAuth from "next-auth";
 import Credentials from "next-auth/providers/credentials";
+import bcrypt from "bcryptjs";
+import { prisma } from "@/lib/prisma";
+import { authConfig } from "@/lib/auth.config";
 
 /**
- * Auth.js (NextAuth v5) skeleton.
+ * Full Auth.js (NextAuth v5) instance — runs in the Node runtime only, because
+ * the Credentials provider uses Prisma + bcrypt.
  *
- * Rule 4: the Credentials provider MUST use the JWT session strategy. There are
- * NO Prisma session/account tables — the session lives entirely in a signed JWT
- * cookie. Do not switch to a database session strategy without revisiting the
- * schema and the auth ADR.
- *
- * Phase 1 will implement real credential verification (look up the User by
- * email, verify the hashed password, return { id, email, role }) and the admin
- * route guard in middleware.
+ * Rule 4: the Credentials provider MUST use the JWT session strategy (inherited
+ * from authConfig). There are NO Prisma session/account tables.
  */
 export const { handlers, auth, signIn, signOut } = NextAuth({
-  session: { strategy: "jwt" },
-  pages: { signIn: "/admin/login" },
+  ...authConfig,
   providers: [
     Credentials({
-      name: "credentials",
       credentials: {
         email: { label: "Email", type: "email" },
         password: { label: "Password", type: "password" },
       },
-      // TODO(Phase 1): verify against the User table with a hashed password.
-      authorize: async () => null,
+      authorize: async (credentials) => {
+        const email =
+          typeof credentials?.email === "string"
+            ? credentials.email.trim().toLowerCase()
+            : "";
+        const password =
+          typeof credentials?.password === "string"
+            ? credentials.password
+            : "";
+
+        if (!email || !password) return null;
+
+        const user = await prisma.user.findUnique({ where: { email } });
+        if (!user) return null;
+
+        const valid = await bcrypt.compare(password, user.passwordHash);
+        if (!valid) return null;
+
+        return {
+          id: user.id,
+          email: user.email,
+          name: user.name ?? null,
+          role: user.role,
+        };
+      },
     }),
   ],
 });

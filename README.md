@@ -68,6 +68,27 @@ Single small AWS Lightsail Ubuntu VPS running the app as **runtime only**. Build
 - Uploads tested against the allow-list (jpg, jpeg, png, webp, pdf for resume only).
 - See [./CONTRIBUTING.md](./CONTRIBUTING.md) for the full checklist.
 
+## Local Development Setup
+
+1. Install dependencies: `npm install`.
+2. Create your env file: `cp .env.example .env` and fill in values. `.env` is gitignored — never commit it.
+3. Start a local PostgreSQL 15/16 and create the database + role (matches [./docs/13_LIGHTSAIL_DEPLOYMENT.md](./docs/13_LIGHTSAIL_DEPLOYMENT.md)):
+   ```sql
+   CREATE DATABASE zerubabel_db;
+   CREATE USER zerubabel_user WITH ENCRYPTED PASSWORD 'STRONG_PASSWORD';
+   GRANT ALL PRIVILEGES ON DATABASE zerubabel_db TO zerubabel_user;
+   \c zerubabel_db
+   GRANT ALL ON SCHEMA public TO zerubabel_user;
+   ALTER DATABASE zerubabel_db OWNER TO zerubabel_user;
+   -- LOCAL DEV ONLY: `prisma migrate dev` creates a shadow database.
+   ALTER ROLE zerubabel_user CREATEDB;
+   ```
+   > Production uses `prisma migrate deploy`, which does **not** create a shadow database and does **not** need `CREATEDB`. The `ALTER ROLE … CREATEDB` line is for local `migrate dev` only.
+4. Set `DATABASE_URL` in `.env` (include `?schema=public&connection_limit=5`) plus `AUTH_SECRET`, `ADMIN_EMAIL`, `ADMIN_PASSWORD`.
+5. Apply migrations: `npx prisma migrate dev`.
+6. Seed the first admin user (reads `ADMIN_EMAIL` / `ADMIN_PASSWORD`, idempotent): `npm run seed`.
+7. Run the app: `npm run dev` → http://localhost:3000 (admin login at `/admin/login`).
+
 ## Git Workflow Summary
 
 - Branches: `main` (stable), `develop` (integration), and short-lived `feat/`, `fix/`, `chore/`, `docs/` branches.

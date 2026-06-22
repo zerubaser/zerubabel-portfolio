@@ -14,14 +14,14 @@ export function ContactForm() {
 
   if (state?.ok) {
     return (
-      <p className="rounded-xl border border-green-500/30 bg-green-500/10 p-6 text-sm">
+      <p role="status" aria-live="polite" className="rounded-xl border border-green-500/30 bg-green-500/10 p-6 text-sm">
         {state.message}
       </p>
     );
   }
 
   return (
-    <form action={action} className="flex max-w-xl flex-col gap-4">
+    <form action={action} className="flex max-w-xl flex-col gap-4" noValidate>
       {/* Honeypot — hidden from humans; bots that fill it are silently dropped. */}
       <input
         type="text"
@@ -35,12 +35,12 @@ export function ContactForm() {
       <div className="grid gap-4 sm:grid-cols-2">
         <div className="flex flex-col gap-1.5">
           <Label htmlFor="name">Name *</Label>
-          <Input id="name" name="name" required />
+          <Input id="name" name="name" autoComplete="name" required aria-invalid={!!state?.errors?.name} />
           <FieldError messages={state?.errors?.name} />
         </div>
         <div className="flex flex-col gap-1.5">
           <Label htmlFor="email">Email *</Label>
-          <Input id="email" name="email" type="email" required />
+          <Input id="email" name="email" type="email" autoComplete="email" required aria-invalid={!!state?.errors?.email} />
           <FieldError messages={state?.errors?.email} />
         </div>
       </div>
@@ -53,13 +53,15 @@ export function ContactForm() {
 
       <div className="flex flex-col gap-1.5">
         <Label htmlFor="body">Message *</Label>
-        <Textarea id="body" name="body" required className="min-h-32" />
+        <Textarea id="body" name="body" required aria-invalid={!!state?.errors?.body} className="min-h-32" />
         <FieldError messages={state?.errors?.body} />
       </div>
 
-      {state && !state.ok && state.message ? (
-        <p className="text-sm text-destructive">{state.message}</p>
-      ) : null}
+      <div aria-live="polite">
+        {state && !state.ok && state.message ? (
+          <p className="text-sm text-destructive">{state.message}</p>
+        ) : null}
+      </div>
 
       <div>
         <Button type="submit" disabled={pending}>

@@ -1,4 +1,6 @@
 import type { Metadata } from "next";
+import { PageHeader } from "@/components/public/page-header";
+import { EmptyState } from "@/components/public/empty-state";
 import { ProjectCard } from "@/components/public/project-card";
 import { buildMetadata } from "@/lib/seo";
 import { getSiteSettings, getPublishedProjects } from "@/server/repositories/public-site";
@@ -18,7 +20,6 @@ export async function generateMetadata(): Promise<Metadata> {
 export default async function ProjectsPage() {
   const projects = await getPublishedProjects();
 
-  // Group by category for simple browsing.
   const byCategory = new Map<string, typeof projects>();
   for (const p of projects) {
     const key = p.category?.name ?? "Other";
@@ -29,17 +30,12 @@ export default async function ProjectsPage() {
 
   return (
     <div className="py-10">
-      <header className="mb-8">
-        <h1 className="text-3xl font-bold sm:text-4xl">Projects</h1>
-        <p className="mt-2 text-muted-foreground">Real systems, grouped by what they do.</p>
-      </header>
+      <PageHeader title="Projects" description="Real systems, grouped by what they do." />
 
       {projects.length === 0 ? (
-        <p className="rounded-xl border border-dashed border-white/15 p-8 text-center text-sm text-muted-foreground">
-          Projects will be published soon.
-        </p>
+        <EmptyState>Projects will be published soon.</EmptyState>
       ) : (
-        <div className="flex flex-col gap-10">
+        <div className="flex flex-col gap-12">
           {[...byCategory.entries()].map(([category, list]) => (
             <section key={category}>
               <h2 className="mb-4 text-sm font-semibold uppercase tracking-wide text-sky-400">{category}</h2>

@@ -89,3 +89,30 @@ Detect device capability (memory/cores/DPR/WebGL) and scale the scene:
 - Dispose Three.js resources on unmount to avoid GPU/JS memory leaks.
 
 TODO: lock exact particle counts and JS budget numbers after first 3D prototype.
+
+## Public page caching (Phase 6 decision)
+
+Public pages are **`force-dynamic`** so the production build never needs a
+database (Rule 3: build runs off-server, ships as an artifact). They render
+per-request from Postgres.
+
+We intentionally did **not** add `unstable_cache` in Phase 6: it serializes
+results with JSON, which turns Prisma `Date` fields into strings and would break
+the `.toISOString()` / `.getUTCFullYear()` calls in the public pages — a subtle
+production bug. The current query set is small (the homepage runs ~7 scoped
+parallel queries) and fine for low traffic on the 512 MB box.
+
+**Recommended caching path when traffic warrants it** (kept here so it isn't
+forgotten), still preserving the DB-free build:
+1. Wrap each read in `unstable_cache(fn, keyParts, { revalidate: 300, tags: [...] })`,
+   and **map `Date` → ISO string inside the cached function** so consumers never
+   call date methods on a deserialized value.
+2. Tag by entity: `projects`, `posts`, `services`, `skills`, `experience`,
+   `testimonials`, `settings`.
+3. Call `revalidateTag('<entity>')` from the matching admin Server Actions on
+   create/update/delete so published changes appear immediately instead of after
+   the revalidate window.
+4. Keep admin pages dynamic/protected; never cache authenticated data.
+
+This stays off the build path (caching is runtime-only) and adds negligible
+memory.

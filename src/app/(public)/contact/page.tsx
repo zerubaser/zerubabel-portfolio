@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { PageHeader } from "@/components/public/page-header";
 import { ContactForm } from "@/components/public/contact-form";
 import { buildMetadata } from "@/lib/seo";
 import { getSiteSettings } from "@/server/repositories/public-site";
@@ -20,19 +21,16 @@ export default async function ContactPage() {
 
   return (
     <div className="py-10">
-      <header className="mb-8">
-        <h1 className="text-3xl font-bold sm:text-4xl">Contact</h1>
-        <p className="mt-2 text-muted-foreground">Tell me about your project — I usually reply within a couple of days.</p>
-      </header>
+      <PageHeader title="Contact" description="Tell me about your project — I usually reply within a couple of days." />
 
       <div className="grid gap-10 md:grid-cols-[1.4fr_1fr]">
         <ContactForm />
 
-        <aside className="flex flex-col gap-3 text-sm">
+        <aside className="flex flex-col gap-4 text-sm">
           {settings?.email ? (
             <div>
               <p className="text-xs uppercase tracking-wide text-muted-foreground">Email</p>
-              <a href={`mailto:${settings.email}`} className="hover:text-sky-400">{settings.email}</a>
+              <a href={`mailto:${settings.email}`} className="rounded-sm hover:text-sky-400 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sky-400">{settings.email}</a>
             </div>
           ) : null}
           {settings?.phone ? (

@@ -1,7 +1,12 @@
 import type { Metadata } from "next";
-import Link from "next/link";
+import { PageHeader } from "@/components/public/page-header";
+import { CTASection } from "@/components/public/cta-section";
+import { ContentRenderer } from "@/components/public/content-renderer";
+import { TechBadge } from "@/components/public/tech-badge";
+import { PublicCard } from "@/components/public/public-card";
 import { MediaImage } from "@/components/public/media-image";
 import { buildMetadata, FALLBACK_DESCRIPTION } from "@/lib/seo";
+import { secondaryCta } from "@/lib/public-ui";
 import {
   getSiteSettings,
   getSkillGroupsWithSkills,
@@ -37,46 +42,41 @@ export default async function AboutPage() {
 
   return (
     <div className="py-10">
-      <header className="mb-8 flex flex-col gap-6 sm:flex-row sm:items-center">
+      <div className="mb-10 flex flex-col gap-6 sm:flex-row sm:items-center">
         {settings?.profileImage ? (
-          <MediaImage src={settings.profileImage} alt={settings?.siteName ?? "Profile"} className="h-32 w-32 rounded-2xl border border-white/10 object-cover" />
+          <MediaImage src={settings.profileImage} alt={settings?.siteName ?? "Profile"} className="h-32 w-32 shrink-0 rounded-2xl border border-white/10 object-cover" />
         ) : null}
-        <div>
-          <h1 className="text-3xl font-bold sm:text-4xl">About</h1>
-          {settings?.location ? <p className="mt-1 text-sm text-muted-foreground">{settings.location}</p> : null}
-        </div>
-      </header>
+        <PageHeader title="About" description={settings?.location ?? undefined} />
+      </div>
 
-      <p className="max-w-3xl whitespace-pre-wrap text-muted-foreground">{bio}</p>
+      <ContentRenderer content={bio} className="max-w-3xl text-base" />
 
       {settings?.resumeUrl ? (
-        <a href={settings.resumeUrl} target="_blank" rel="noopener noreferrer" className="mt-6 inline-block rounded-md border border-white/15 px-5 py-2.5 text-sm font-medium hover:bg-white/5">
+        <a href={settings.resumeUrl} target="_blank" rel="noopener noreferrer" className={`mt-6 ${secondaryCta}`}>
           Download CV
         </a>
       ) : null}
 
       {skillGroups.some((g) => g.skills.length > 0) ? (
-        <section className="mt-12">
+        <section className="mt-14">
           <h2 className="text-xl font-semibold">Skills</h2>
           <div className="mt-4 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
             {skillGroups.filter((g) => g.skills.length > 0).map((group) => (
-              <div key={group.id} className="rounded-xl border border-white/10 bg-white/5 p-4">
+              <PublicCard key={group.id}>
                 <h3 className="text-sm font-semibold text-sky-400">{group.name}</h3>
                 <div className="mt-2 flex flex-wrap gap-1.5">
-                  {group.skills.map((skill) => (
-                    <span key={skill.id} className="rounded-full border border-white/10 px-2 py-0.5 text-xs text-muted-foreground">{skill.name}</span>
-                  ))}
+                  {group.skills.map((skill) => <TechBadge key={skill.id}>{skill.name}</TechBadge>)}
                 </div>
-              </div>
+              </PublicCard>
             ))}
           </div>
         </section>
       ) : null}
 
       {experience.length > 0 ? (
-        <section className="mt-12">
+        <section className="mt-14">
           <h2 className="text-xl font-semibold">Experience</h2>
-          <ol className="mt-4 flex flex-col gap-4 border-l border-white/10 pl-6">
+          <ol className="mt-4 flex flex-col gap-5 border-l border-white/10 pl-6">
             {experience.map((item) => (
               <li key={item.id} className="relative">
                 <span className="absolute -left-[27px] top-1.5 h-2 w-2 rounded-full bg-sky-400" aria-hidden="true" />
@@ -84,19 +84,14 @@ export default async function AboutPage() {
                   <p className="font-medium">{item.role} · <span className="text-muted-foreground">{item.org}</span></p>
                   <span className="text-xs text-muted-foreground">{fmtPeriod(item.startDate, item.endDate)}</span>
                 </div>
-                {item.description ? <p className="mt-1 whitespace-pre-wrap text-sm text-muted-foreground">{item.description}</p> : null}
+                {item.description ? <ContentRenderer content={item.description} className="mt-1 text-sm" /> : null}
               </li>
             ))}
           </ol>
         </section>
       ) : null}
 
-      <section className="mt-12 rounded-2xl border border-white/10 bg-gradient-to-r from-sky-500/10 to-orange-500/10 p-8 text-center">
-        <h2 className="text-2xl font-semibold">Let’s work together</h2>
-        <Link href="/contact" className="mt-5 inline-block rounded-md bg-gradient-to-r from-sky-500 to-orange-500 px-6 py-2.5 text-sm font-medium text-white hover:opacity-90">
-          Contact me
-        </Link>
-      </section>
+      <CTASection title="Let’s work together" ctaLabel="Contact me" />
     </div>
   );
 }

@@ -77,6 +77,12 @@ export default async function ProjectsPage() {
                         </Button>
                       </form>
                       <Link
+                        href={`/admin/projects/${project.id}/images`}
+                        className={buttonVariants({ variant: "outline", size: "sm" })}
+                      >
+                        Images
+                      </Link>
+                      <Link
                         href={`/admin/projects/${project.id}/edit`}
                         className={buttonVariants({ variant: "outline", size: "sm" })}
                       >

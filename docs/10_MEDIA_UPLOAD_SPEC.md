@@ -97,3 +97,24 @@ Any file whose content looks script-like (e.g. `<?php`, `<script`, shell shebang
 - [ ] Script-like / dangerous extensions rejected.
 - [ ] Nginx serves /uploads/ with cache headers; Next does not optimize them.
 - [ ] Alt text + ImageType recorded.
+
+## Implementation notes (Phase 3)
+
+- **Upload pipeline:** `src/lib/upload.ts` validates (extension + MIME + magic
+  bytes + size), converts images to WebP (resize ≤1920px via sharp), generates
+  safe filenames (`<prefix>-YYYYMMDD-<rand>.<ext>`, never the user filename),
+  and writes inside `UPLOAD_DIR` with path-traversal guards. PDFs are allowed
+  only for the `resume` target; SVG is blocked.
+- **Endpoint:** `POST /api/admin/upload` (Node runtime, `auth()`-guarded, not
+  matched by middleware) returns JSON `{ url, filename, size, contentType }`.
+  Stored URLs are origin-relative `/uploads/...`.
+- **Serving:** In **production, Nginx** serves `/uploads/` directly and never
+  proxies it to Next. For **local dev only**, `src/app/uploads/[...path]/route.ts`
+  serves files from `UPLOAD_DIR` (read-only, traversal-guarded, allowed
+  extensions only). Production must not depend on this route.
+- **ProjectImage:** managed at `/admin/projects/[id]/images` (upload + add,
+  edit metadata, delete row + physical file). Standalone files are browsed at
+  `/admin/media`; deletion is refused while a ProjectImage still references the
+  file.
+- **TODO:** wire `SiteSettings.resumeUrl` to an uploaded resume in the
+  site-settings phase; consider a standalone media-library model only if needed.

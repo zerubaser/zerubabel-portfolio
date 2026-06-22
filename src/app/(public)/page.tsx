@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { Section } from "@/components/public/section";
 import { ProjectCard } from "@/components/public/project-card";
-import { MediaImage } from "@/components/public/media-image";
+import { Hero3DLazy } from "@/components/public/hero-3d-lazy";
 import { CTASection } from "@/components/public/cta-section";
 import { EmptyState } from "@/components/public/empty-state";
 import { TechBadge } from "@/components/public/tech-badge";
@@ -71,13 +71,10 @@ export default async function HomePage() {
               ) : null}
             </div>
           </div>
-          <div className="flex flex-col items-center gap-4">
-            {settings?.profileImage ? (
-              <MediaImage src={settings.profileImage} alt={heroTitle} className="h-48 w-48 rounded-2xl border border-white/10 object-cover" />
-            ) : null}
-            <div className="w-full rounded-xl border border-dashed border-white/15 bg-white/5 p-4 text-center text-xs text-muted-foreground">
-              A 3D “Digital Command Center” hero will live here in a later phase.
-            </div>
+          {/* 3D Digital Command Center — lazy, client-only, with static fallback.
+              Decorative: the H1/subtitle/CTAs above carry all SEO content. */}
+          <div className="relative mx-auto aspect-square w-full max-w-md">
+            <Hero3DLazy />
           </div>
         </div>
       </section>

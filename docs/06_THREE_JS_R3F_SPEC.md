@@ -71,7 +71,37 @@ src/three/
 - `store/` (lightweight, e.g. zustand) coordinates scroll state, loader progress, and quality tier.
 - Objects are pure presentational R3F components; scenes compose them; hooks drive motion/quality.
 
+## Phase 7 implementation (hero only)
+
+Built the **Digital Command Center** hero (homepage only). All procedural
+geometry — no GLTF/GLB assets.
+
+- **Files:** `src/three/Canvas3D.tsx`, `src/three/scenes/HeroScene.tsx`,
+  `src/three/objects/{ZSCore,SystemNode,ApiLines,DashboardPanel,DatabaseNode,Particles}.tsx`,
+  `src/three/hooks/useReducedMotion.ts`, and
+  `src/components/public/{hero-3d-lazy,hero-3d,hero-fallback}.tsx`.
+- **Scene:** glowing core + 6 satellite system nodes + animated API lines with
+  travelling pulses + dashboard panel + phone panel + stacked-cylinder database
+  + drifting particle field; soft blue/orange lights; eased mouse parallax.
+- **Loading:** `hero-3d-lazy` does `next/dynamic(() => import('./hero-3d'),
+  { ssr:false, loading: HeroFallback })` from a client wrapper, so Three.js +
+  drei + postprocessing land in a homepage-only chunk (First Load JS for `/`
+  ~+2 kB; other pages unchanged).
+- **Capability tiers (`hero-3d`):** reduced-motion or no-WebGL → static
+  `HeroFallback`; mobile / ≤4 GB / ≤4 cores → `low` (no Bloom, DPR 1, fewer
+  particles); else `high` (Bloom, DPR ≤1.5). An error boundary falls back to
+  the static visual. Frame loop pauses (`frameloop="never"`) when offscreen
+  (IntersectionObserver) or tab hidden.
+- **SEO/a11y:** H1/subtitle/CTAs stay HTML; canvas is decorative; fallback is
+  `aria-hidden`.
+
+### Resolved from the TODOs above
+- Device tier: simple width + `deviceMemory`/`hardwareConcurrency` heuristic
+  (no GPU benchmark fetch — avoids a network call).
+- Hero uses a geometric **system core** (not 3D text) to avoid bundling/CDN
+  fonts (troika). The "ZS"/Addis Ababa HUD treatment remains a later-phase TODO.
+
 ## Open Items (TODO)
-- TODO: Source/commission the 3D model assets (laptop, phone) or build from primitives.
-- TODO: Decide device-tier detection method (GPU heuristic vs simple width/UA).
-- TODO: Confirm exact Addis Ababa HUD treatment.
+- TODO: Optional GLTF laptop/phone models if a lightweight source is found.
+- TODO: Confirm exact Addis Ababa HUD / "ZS" wordmark treatment.
+- TODO: Later 3D sections (Project Universe, Skills Galaxy, timeline) — not in Phase 7.
